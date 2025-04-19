@@ -1,0 +1,59 @@
+# Step 1: Create the database and add sample data
+import sqlite3
+
+conn = sqlite3.connect("sales_data.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS sales (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product TEXT,
+    quantity INTEGER,
+    price REAL
+)
+""")
+
+sample_data = [
+    ("Pen", 10, 1.5),
+    ("Notebook", 5, 3.0),
+    ("Pencil", 20, 0.5),
+    ("Pen", 15, 1.5),
+    ("Notebook", 8, 3.0),
+    ("Pencil", 25, 0.5)
+]
+
+cursor.executemany("INSERT INTO sales (product, quantity, price) VALUES (?, ?, ?)", sample_data)
+conn.commit()
+conn.close()
+
+print("Database created and sample data added.")
+
+# Step 2: Run SQL and get summary
+import pandas as pd
+
+conn = sqlite3.connect("sales_data.db")
+
+query = """
+SELECT 
+    product, 
+    SUM(quantity) AS total_qty, 
+    SUM(quantity * price) AS revenue 
+FROM sales 
+GROUP BY product
+"""
+
+df = pd.read_sql_query(query, conn)
+conn.close()
+
+print(df)
+
+# Step 3: Plot the data
+import matplotlib.pyplot as plt
+
+df.plot(kind='bar', x='product', y='revenue', legend=False)
+plt.title("Revenue by Product")
+plt.xlabel("Product")
+plt.ylabel("Revenue")
+plt.tight_layout()
+plt.savefig("sales_chart.png")  # optional
+plt.show()
